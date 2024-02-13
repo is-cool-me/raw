@@ -26,27 +26,35 @@ directoryPaths.forEach(function(directoryPath) {
         files.forEach(function (file) {
             const filePath = path.join(directoryPath, file);
 
-            fs.readFile(filePath, "utf8", (err, data) => {
+            fs.stat(filePath, (err, stats) => {
                 if (err) throw err;
-                
-                console.log("Data read from file:", data); // Logging data read from file
 
-                try {
-                    const dataArray = [JSON.parse(data)];
+                if (stats.isFile()) {
+                    fs.readFile(filePath, "utf8", (err, data) => {
+                        if (err) throw err;
+                        
+                        console.log("Data read from file:", data); // Logging data read from file
 
-                    for (const item of dataArray) {
-                        item.owner.email = item.owner.email.replace(/@/, " (at) ");
-                    }
+                        try {
+                            const dataArray = [JSON.parse(data)];
 
-                    combinedArray = combinedArray.concat(dataArray);
+                            for (const item of dataArray) {
+                                item.owner.email = item.owner.email.replace(/@/, " (at) ");
+                            }
 
-                    if (combinedArray.length === files.length) {
-                        fs.writeFile("raw/index.json", JSON.stringify(combinedArray), (err) => {
-                            if (err) throw err;
-                        });
-                    }
-                } catch (error) {
-                    console.error("Error parsing JSON:", error);
+                            combinedArray = combinedArray.concat(dataArray);
+
+                            if (combinedArray.length === files.length) {
+                                fs.writeFile("raw/index.json", JSON.stringify(combinedArray), (err) => {
+                                    if (err) throw err;
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Error parsing JSON:", error);
+                        }
+                    });
+                } else {
+                    console.log(filePath + " is a directory. Skipping...");
                 }
             });
         });
