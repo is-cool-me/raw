@@ -28,19 +28,25 @@ directoryPaths.forEach(function(directoryPath) {
 
             fs.readFile(filePath, "utf8", (err, data) => {
                 if (err) throw err;
+                
+                console.log("Data read from file:", data); // Logging data read from file
 
-                const dataArray = [JSON.parse(data)];
+                try {
+                    const dataArray = [JSON.parse(data)];
 
-                for (const item of dataArray) {
-                    item.owner.email = item.owner.email.replace(/@/, " (at) ");
-                }
+                    for (const item of dataArray) {
+                        item.owner.email = item.owner.email.replace(/@/, " (at) ");
+                    }
 
-                combinedArray = combinedArray.concat(dataArray);
+                    combinedArray = combinedArray.concat(dataArray);
 
-                if (combinedArray.length === files.length) {
-                    fs.writeFile("raw/index.json", JSON.stringify(combinedArray), (err) => {
-                        if (err) throw err;
-                    });
+                    if (combinedArray.length === files.length) {
+                        fs.writeFile("raw/index.json", JSON.stringify(combinedArray), (err) => {
+                            if (err) throw err;
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error parsing JSON:", error);
                 }
             });
         });
