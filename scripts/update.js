@@ -1,62 +1,43 @@
 const fs = require("fs");
 const path = require("path");
 
-const directoryPaths = [
-    path.join(__dirname, "../../domains"),
-    path.join(__dirname, "../../domains/AorzoHosting")
-];
+const directoryPath = path.join(__dirname, "../../domains");
 
 let combinedArray = [];
 
-directoryPaths.forEach(function(directoryPath) {
-    fs.readdir(directoryPath, function (err, files) {
-        if (err) throw err;
+fs.readdir(directoryPath, function (err, files) {
+    if (err) throw err;
 
-        function removeValue(value, index, arr) {
-            if (value === "reserved") {
-                arr.splice(index, 1);
-                return true;
-            }
-
-            return false;
+    function removeValue(value, index, arr) {
+        if (value === "reserved") {
+            arr.splice(index, 1);
+            return true;
         }
 
-        files.filter(removeValue);
+        return false;
+    }
 
-        files.forEach(function (file) {
-            const filePath = path.join(directoryPath, file);
+    files.filter(removeValue);
 
-            fs.stat(filePath, (err, stats) => {
-                if (err) throw err;
+    files.forEach(function (file) {
+        const filePath = path.join(directoryPath, file);
 
-                if (stats.isFile()) {
-                    fs.readFile(filePath, "utf8", (err, data) => {
-                        if (err) throw err;
+        fs.readFile(filePath, "utf8", (err, data) => {
+            if (err) throw err;
 
-                        console.log("Data read from file:", data); // Logging data read from file
+            const dataArray = [JSON.parse(data)];
 
-                        try {
-                            const parsedData = JSON.parse(data);
-                            parsedData.directory = path.basename(directoryPath); // Add directory name as a property
+            for (const item of dataArray) {
+                item.owner.email = item.owner.email.replace(/@/, " (at) ");
+            }
 
-                            combinedArray.push(parsedData);
+            combinedArray = combinedArray.concat(dataArray);
 
-                            if (combinedArray.length === files.length) {
-                                // Check if all files from all directories are read
-                                const indexFilePath = path.join(__dirname, "raw/index.json");
-                                fs.writeFile(indexFilePath, JSON.stringify(combinedArray), (err) => {
-                                    if (err) throw err;
-                                    console.log("Combined data written to index.json");
-                                });
-                            }
-                        } catch (error) {
-                            console.error("Error parsing JSON:", error);
-                        }
-                    });
-                } else {
-                    console.log(filePath + " is a directory. Skipping...");
-                }
-            });
+            if (combinedArray.length === files.length) {
+                fs.writeFile("raw/index.json", JSON.stringify(combinedArray), (err) => {
+                    if (err) throw err;
+                });
+            }
         });
     });
 });
