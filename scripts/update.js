@@ -26,27 +26,35 @@ directoryPaths.forEach(function(directoryPath) {
         files.forEach(function (file) {
             const filePath = path.join(directoryPath, file);
 
-            fs.readFile(filePath, "utf8", (err, data) => {
+            fs.stat(filePath, (err, stats) => {
                 if (err) throw err;
-                
-                console.log("Data read from file:", data); // Logging data read from file
 
-                try {
-                    const parsedData = JSON.parse(data);
-                    parsedData.directory = path.basename(directoryPath); // Add directory name as a property
+                if (stats.isFile()) {
+                    fs.readFile(filePath, "utf8", (err, data) => {
+                        if (err) throw err;
 
-                    combinedArray.push(parsedData);
+                        console.log("Data read from file:", data); // Logging data read from file
 
-                    if (combinedArray.length === files.length) {
-                        // Check if all files from all directories are read
-                        const indexFilePath = path.join(__dirname, "raw/index.json");
-                        fs.writeFile(indexFilePath, JSON.stringify(combinedArray), (err) => {
-                            if (err) throw err;
-                            console.log("Combined data written to index.json");
-                        });
-                    }
-                } catch (error) {
-                    console.error("Error parsing JSON:", error);
+                        try {
+                            const parsedData = JSON.parse(data);
+                            parsedData.directory = path.basename(directoryPath); // Add directory name as a property
+
+                            combinedArray.push(parsedData);
+
+                            if (combinedArray.length === files.length) {
+                                // Check if all files from all directories are read
+                                const indexFilePath = path.join(__dirname, "raw/index.json");
+                                fs.writeFile(indexFilePath, JSON.stringify(combinedArray), (err) => {
+                                    if (err) throw err;
+                                    console.log("Combined data written to index.json");
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Error parsing JSON:", error);
+                        }
+                    });
+                } else {
+                    console.log(filePath + " is a directory. Skipping...");
                 }
             });
         });
