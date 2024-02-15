@@ -16,7 +16,9 @@ function readFiles(dir) {
             const data = fs.readFileSync(filePath, "utf8");
             const dataArray = [JSON.parse(data)];
             for (const item of dataArray) {
-                item.owner.email = item.owner.email.replace(/@/, " (at) ");
+                if (item.owner && item.owner.email) {
+                    item.owner.email = item.owner.email.replace(/@/, " (at) ");
+                }
             }
             combinedArray = combinedArray.concat(dataArray);
         }
