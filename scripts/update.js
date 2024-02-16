@@ -11,16 +11,20 @@ function readFiles(dir) {
         const filePath = path.join(dir, file);
         const stats = fs.statSync(filePath);
         if (stats.isDirectory()) {
-            readFiles(filePath); // Recursively read files in subdirectories
+            // Recursively read files in subdirectories
+            readFiles(filePath); 
         } else {
-            const data = fs.readFileSync(filePath, "utf8");
-            const dataArray = [JSON.parse(data)];
-            for (const item of dataArray) {
-                if (item.owner && item.owner.email) {
-                    item.owner.email = item.owner.email.replace(/@/, " (at) ");
+            // Check if the file is not from the "reserved" directory
+            if (!filePath.includes(path.join("domains", "reserved"))) {
+                const data = fs.readFileSync(filePath, "utf8");
+                const dataArray = [JSON.parse(data)];
+                for (const item of dataArray) {
+                    if (item.owner && item.owner.email) {
+                        item.owner.email = item.owner.email.replace(/@/, " (at) ");
+                    }
                 }
+                combinedArray = combinedArray.concat(dataArray);
             }
-            combinedArray = combinedArray.concat(dataArray);
         }
     });
 }
